@@ -1,0 +1,87 @@
+const request = require("request");
+
+var osu = function(api_key) {
+	if (!(this instanceof osu)) {
+		return new osu(api_key);
+	}
+	if (!api_key) {
+		throw new Error("Please supply an API key. See https://osu.ppy.sh/p/api for details.");
+	}
+	this.api_key = api_key;
+	this.base_url = "https://osu.ppy.sh/api";
+	
+	this.api_call = function(url, options, callback) {
+		options["k"] = this.api_key;
+		var payload = {
+			"baseUrl": this.base_url,
+			"method": "GET",
+			"qs": options,
+			"url": url,
+		};
+		request(payload, function(error, response, body) {
+			if (error) {
+				throw new Error("API '" + url + "' failed. Error: " + error.toString());
+			}
+			var result = JSON.parse(body);
+			callback(result);
+		});
+	};
+	
+	this.get_beatmaps = function(options, callback) {
+		this.api_call("/get_beatmaps", options, function(result) {
+			if (callback) {
+				callback(result);
+			}
+		});
+	};
+	
+	this.get_user = function(options, callback) {
+		this.api_call("/get_user", options, function(result) {
+			if (callback) {
+				callback(result);
+			}
+		});
+	};
+	
+	this.get_scores = function(options, callback) {
+		this.api_call("/get_scores", options, function(result) {
+			if (callback) {
+				callback(result);
+			}
+		});
+	};
+	
+	this.get_user_best = function(options, callback) {
+		this.api_call("/get_user_best", options, function(result) {
+			if (callback) {
+				callback(result);
+			}
+		});
+	};
+	
+	this.get_user_recent = function(options, callback) {
+		this.api_call("/get_user_recent", options, function(result) {
+			if (callback) {
+				callback(result);
+			}
+		});
+	};
+	
+	this.get_match = function(options, callback) {
+		this.api_call("/get_match", options, function(result) {
+			if (callback) {
+				callback(result);
+			}
+		});
+	};
+	
+	this.get_replay = function(options, callback) {
+		this.api_call("/get_replay", options, function(result) {
+			if (callback) {
+				callback(result);
+			}
+		});
+	};
+};
+
+module.exports = osu;

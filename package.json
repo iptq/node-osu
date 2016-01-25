@@ -1,0 +1,26 @@
+{
+  "name": "osu",
+  "version": "1.0.0",
+  "description": "osu! API Helper Library",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IOExceptionOsu/node-osu.git"
+  },
+  "keywords": [
+    "osu",
+    "api"
+  ],
+  "author": "IOException <ioexceptionosu@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/IOExceptionOsu/node-osu/issues"
+  },
+  "homepage": "https://github.com/IOExceptionOsu/node-osu#readme",
+  "dependencies": {
+    "request": "^2.67.0"
+  }
+}
