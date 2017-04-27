@@ -21,7 +21,7 @@ Then you may call any function. Check out the [osu! API's documentation](https:/
 osu.get_beatmaps({
 	"s": 39804,
 	"limit": 1
-}, function(result) {
+}).then(function(result) {
 	console.log(result);
 );
 ```
@@ -60,7 +60,7 @@ which of course, would return something like this:
 }]
 ```
 
-Each function takes two parameters: the options that will help filter the search and the callback function that will be run when the call is complete (this is necessary because all the calls are asynchronous). The callback function should take in one parameter, `result`, the array of objects that is returned from the API.
+Each function takes only one parameter: an object containing the options that will help filter the search. The function will return a Promise which you can then use to chain calls or use in async/await situations. Each Promise is resolved with one parameter, `result`, the result from the API call.
 
 Contact
 ------
