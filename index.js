@@ -9,12 +9,13 @@ var osu = function (api_key) {
 	}
 	this.api_key = api_key;
 	this.base_url = "https://osu.ppy.sh/api";
+	let self = this;
 
 	this.api_call = function (url, options) {
 		return new Promise(function (resolve) {
-			options["k"] = this.api_key;
+			options["k"] = self.api_key;
 			var payload = {
-				"baseUrl": this.base_url,
+				"baseUrl": self.base_url,
 				"method": "GET",
 				"qs": options,
 				"url": url,
@@ -31,7 +32,7 @@ var osu = function (api_key) {
 
 	this.get_beatmaps = function (options) {
 		return new Promise(function (resolve) {
-			this.api_call("/get_beatmaps", options).then(function (result) {
+			self.api_call("/get_beatmaps", options).then(function (result) {
 				resolve(result);
 			});
 		});
@@ -39,7 +40,7 @@ var osu = function (api_key) {
 
 	this.get_user = function (options) {
 		return new Promise(function (resolve) {
-			this.api_call("/get_user", options).then(function (result) {
+			self.api_call("/get_user", options).then(function (result) {
 				resolve(result);
 			});
 		});
@@ -47,7 +48,7 @@ var osu = function (api_key) {
 
 	this.get_scores = function (options) {
 		return new Promise(function (resolve) {
-			this.api_call("/get_scores", options, function (result) {
+			self.api_call("/get_scores", options, function (result) {
 				resolve(result);
 			});
 		});
@@ -55,7 +56,7 @@ var osu = function (api_key) {
 
 	this.get_user_best = function (options) {
 		return new Promise(function (resolve) {
-			this.api_call("/get_user_best", options).then(function (result) {
+			self.api_call("/get_user_best", options).then(function (result) {
 				resolve(result);
 			});
 		});
@@ -63,7 +64,7 @@ var osu = function (api_key) {
 
 	this.get_user_recent = function (options) {
 		return new Promise(function (resolve) {
-			this.api_call("/get_user_recent", options).then(function (result) {
+			self.api_call("/get_user_recent", options).then(function (result) {
 				resolve(result);
 			});
 		});
@@ -71,7 +72,7 @@ var osu = function (api_key) {
 
 	this.get_match = function (options) {
 		return new Promise(function (resolve) {
-			this.api_call("/get_match", options).then(function (result) {
+			self.api_call("/get_match", options).then(function (result) {
 				resolve(result);
 			});
 		});
@@ -79,7 +80,7 @@ var osu = function (api_key) {
 
 	this.get_replay = function (options) {
 		return new Promise(function (resolve) {
-			this.api_call("/get_replay", options, function (result) {
+			self.api_call("/get_replay", options, function (result) {
 				resolve(result);
 			});
 		});
