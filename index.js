@@ -31,59 +31,31 @@ var osu = function (api_key) {
 	};
 
 	this.get_beatmaps = function (options) {
-		return new Promise(function (resolve) {
-			self.api_call("/get_beatmaps", options).then(function (result) {
-				resolve(result);
-			});
-		});
+		return self.api_call("/get_beatmaps", options);
 	};
 
 	this.get_user = function (options) {
-		return new Promise(function (resolve) {
-			self.api_call("/get_user", options).then(function (result) {
-				resolve(result);
-			});
-		});
+		return self.api_call("/get_user", options);
 	};
 
 	this.get_scores = function (options) {
-		return new Promise(function (resolve) {
-			self.api_call("/get_scores", options, function (result) {
-				resolve(result);
-			});
-		});
+		return self.api_call("/get_scores", options);
 	};
 
 	this.get_user_best = function (options) {
-		return new Promise(function (resolve) {
-			self.api_call("/get_user_best", options).then(function (result) {
-				resolve(result);
-			});
-		});
+		return self.api_call("/get_user_best", options);
 	};
 
 	this.get_user_recent = function (options) {
-		return new Promise(function (resolve) {
-			self.api_call("/get_user_recent", options).then(function (result) {
-				resolve(result);
-			});
-		});
+		return self.api_call("/get_user_recent", options);
 	};
 
 	this.get_match = function (options) {
-		return new Promise(function (resolve) {
-			self.api_call("/get_match", options).then(function (result) {
-				resolve(result);
-			});
-		});
+		return self.api_call("/get_match", options);
 	};
 
 	this.get_replay = function (options) {
-		return new Promise(function (resolve) {
-			self.api_call("/get_replay", options, function (result) {
-				resolve(result);
-			});
-		});
+		return self.api_call("/get_replay", options);
 	};
 };
 
