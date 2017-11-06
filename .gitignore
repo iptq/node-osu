@@ -1,1 +1,8 @@
+# Node modules
 node_modules
+
+# Documentation
+docs
+
+# Generated files.
+dist
