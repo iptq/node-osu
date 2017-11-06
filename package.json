@@ -2,8 +2,7 @@
   "name": "osu",
   "version": "2.0.0",
   "description": "osu! API Helper Library",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "typedoc": "typedoc --theme minimal --out ./docs --readme mainpage.md ./src"
