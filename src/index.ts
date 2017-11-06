@@ -1,1 +1,1 @@
-export { API, APIOptions } from "./api";
+export { api } from "./api";
