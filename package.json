@@ -6,7 +6,7 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "tsc",
-    "typedoc": "typedoc --out ./docs ./src"
+    "typedoc": "typedoc --theme minimal --out ./docs --readme mainpage.md ./src"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
     "request": "^2.67.0"
   },
   "devDependencies": {
+    "@types/request": "^2.0.7",
     "typedoc": "^0.9.0",
     "typescript": "^2.6.1"
   }
