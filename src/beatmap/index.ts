@@ -20,6 +20,7 @@ export class Beatmap {
 
     constructor(
         public FileFormat: number,
+        public AudioFilename: string,
         public Config: BeatmapConfig,
         public BpmMin: number = 0,
         public BpmMax: number = Infinity,
@@ -49,6 +50,8 @@ export class Beatmap {
         let prev: TimingPoint|null = null;
         let bpmMin = 0;
         let bpmMax = Infinity;
+
+        let audioFilename = "";
 
         let stackLeniency = 0;
         let distanceSpacing = 0;
@@ -113,7 +116,7 @@ export class Beatmap {
                 break;
             default:
                 if (!osuSection) {
-                    match = /^osu file format (v[0-9]+)$/.exec(line);
+                    match = /^osu file format v([0-9]+)$/.exec(line);
                     if (match) {
                         fileFormat = parseInt(match[1]);
                         continue;
@@ -170,8 +173,13 @@ export class Beatmap {
                         case "slidertickrate":
                             sliderTickRate = parseInt(match[2]);
                             break;
+                        case "audiofilename":
+                            audioFilename = match[2];
+                            break;
                         default:
-                            throw new ParseError(`Unknown field '${match[1]}'.`);
+                            // throw new ParseError(`Unknown field '${match[1]}'.`);
+                            console.error(`Unknown field '${match[1]}'.`);
+                            break;
                         }
                     }
                 }
@@ -211,7 +219,7 @@ export class Beatmap {
         //     }
         // }
 
-        let beatmap = new Beatmap(fileFormat, config, bpmMin, bpmMax, difficulty, bookmarks, hitObjects, timingPoints);
+        let beatmap = new Beatmap(fileFormat, audioFilename, config, bpmMin, bpmMax, difficulty, bookmarks, hitObjects, timingPoints);
         beatmap.HitObjects.map(x => x.Parent = beatmap);
 
         return beatmap;

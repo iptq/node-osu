@@ -4,10 +4,8 @@ import {Spline} from "../math/spline";
 import Vector from "../math/vector";
 
 import {Beatmap} from ".";
-import Hitsound from "./additions";
+import Hitsound from "./hitsounds";
 import {AdditionType, CurveType, HitsoundType} from "./structs";
-
-const constants = require("../constants");
 
 let additionTypes = [ null, "normal", "soft", "drum" ];
 
@@ -19,7 +17,7 @@ export abstract class HitObject {
     constructor(
         public FadeTime: number,
         public NewCombo: boolean,
-        public Hitsound: Hitsound,
+        public Hitsound: Hitsound|null,
         public StartTime: number,
         public EndTime: number,
         public Position: Vector,
@@ -85,6 +83,10 @@ export abstract class HitObject {
 
             let points = (parts[5] || "").split("|");
             if (points.length) {
+                for (i = 1; i < points.length; i += 1) {
+                    let coordinates = points[i].split(":");
+                    controlPoints.push(new Vector(parseInt(coordinates[0]), parseInt(coordinates[1])));
+                }
                 switch (points[0]) {
                 case "L":
                     curveType = CurveType.Linear;
@@ -101,10 +103,6 @@ export abstract class HitObject {
                     curveType = CurveType.Perfect;
                     spline = Spline.perfect(controlPoints, pixelLength);
                     break;
-                }
-                for (i = 1; i < points.length; i += 1) {
-                    let coordinates = points[i].split(":");
-                    controlPoints.push(new Vector(parseInt(coordinates[0]), parseInt(coordinates[1])));
                 }
             }
 
@@ -136,7 +134,7 @@ export abstract class HitObject {
             if (spline == null)
                 throw new Error(`Could not calculate spline for '${line}'.`);
 
-            let endPosition = SliderMath.GetEndPoint(curveType, pixelLength, controlPoints);
+            let endPosition = SliderMath.GetEndPoint(spline, curveType, pixelLength, controlPoints);
             if (endPosition == null)
                 throw new Error(`Could not determine end position for '${line}'.`);
 
@@ -180,7 +178,7 @@ export class Slider extends HitObject {
     constructor(
         FadeTime: number,
         NewCombo: boolean,
-        Hitsound: Hitsound,
+        Hitsound: Hitsound|null,
         StartTime: number,
         EndTime: number,
         Position: Vector,

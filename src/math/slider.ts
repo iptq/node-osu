@@ -1,5 +1,6 @@
 import {CurveType} from "../beatmap/structs";
 
+import {Spline} from "./spline";
 import Vector from "./vector";
 
 export default class SliderMath {
@@ -14,7 +15,7 @@ export default class SliderMath {
         return [ center, r ];
     }
 
-    static GetEndPoint(curveType: CurveType, sliderLength: number, points: Vector[]): Vector|null {
+    static GetEndPoint(spline: Spline, curveType: CurveType, sliderLength: number, points: Vector[]): Vector|null {
         // determines the other endpoint of the slider
         // points is the set of control points
         // curveType and sliderLength are given in the .osu
@@ -22,14 +23,15 @@ export default class SliderMath {
         case CurveType.Linear:
             return SliderMath.PointOnLine(points[0], points[1], sliderLength);
         case CurveType.Bezier:
-            throw new Error("unimplemented");
+            return spline.points[spline.points.length - 1];
         case CurveType.Perfect:
             if (!points || points.length < 2)
                 return null;
+
             if (points.length == 2)
                 return SliderMath.PointOnLine(points[0], points[1], sliderLength);
             if (points.length > 3)
-                return SliderMath.GetEndPoint(CurveType.Bezier, sliderLength, points);
+                return SliderMath.GetEndPoint(spline, CurveType.Bezier, sliderLength, points);
 
             let [circumCenter, radius] = SliderMath.GetCircumCircle(points[0], points[1], points[2]);
             let radians = sliderLength / radius;

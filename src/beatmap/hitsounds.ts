@@ -10,7 +10,9 @@ export default class Hitsound {
         public Additions: AdditionType,
     ) {}
 
-    static parse(line: string): Hitsound {
+    static parse(line: string|undefined): Hitsound|null {
+        if (line == undefined)
+            return null;
         let parts = line.split(":");
 
         let sample = null;
@@ -28,7 +30,8 @@ export default class Hitsound {
         //     additions.hitsound = parts[4];
 
         if (sample == null || addition == null)
-            throw new ParseError(`Invalid hitsound: '${line}'`);
+            return null;
+        // throw new ParseError(`Invalid hitsound: '${line}'`);
         return new Hitsound(sample, addition);
     }
 }

@@ -4,7 +4,7 @@ osu! Standard Library
 This library aims to be an all-in-one library for developing osu! related applications using Javascript/Node.js. Here is a list of its current features (checked) and planned features (unchecked). Drop an issue if there's something you want to see in this list!
 
 - [x] osu! API driver
-- [ ] Beatmap parser
+- [x] Beatmap parser
 - [ ] Built-in implementation of oppai
 - [ ] Mapset utils
 

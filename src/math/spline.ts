@@ -1,6 +1,7 @@
 import SliderMath from "./slider";
 import Vector from "./vector";
-const constants = require("../constants");
+
+let bezierTolerance = 0.25;
 
 export class Spline {
     public points: Vector[];
@@ -72,7 +73,7 @@ class BezierApproximator {
 
     static isFlatEnough(curve: Vector[]): boolean {
         for (let i = 1; i < curve.length - 1; ++i) {
-            if ((curve[i - 1].sub(curve[i].smul(2)).add(curve[i + 1])).m2 > constants.bezierTolerance)
+            if ((curve[i - 1].sub(curve[i].smul(2)).add(curve[i + 1])).m2 > bezierTolerance)
                 return false;
         }
         return true;
