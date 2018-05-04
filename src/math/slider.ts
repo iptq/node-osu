@@ -1,13 +1,8 @@
-import {Vector} from "./vector";
+import {CurveType} from "../beatmap/structs";
 
-export enum SliderType {
-    Linear,
-    Catmull,
-    Bezier,
-    Perfect
-}
+import Vector from "./vector";
 
-export class SliderMath {
+export default class SliderMath {
     static getCircumCircle(p1: Vector, p2: Vector, p3: Vector): [ Vector, number ] {
         // get the [center, radius] circumcircle of the points p1, p2, p3
         let x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y, x3 = p3.x, y3 = p3.y;
@@ -18,25 +13,26 @@ export class SliderMath {
         let r = center.distanceTo(new Vector(x1, y1));
         return [ center, r ];
     }
-    static getEndPoint(curveType: SliderType, sliderLength: number, points: Vector[]): Vector|null {
+
+    static getEndPoint(curveType: CurveType, sliderLength: number, points: Vector[]): Vector|null {
         // determines the other endpoint of the slider
         // points is the set of control points
         // curveType and sliderLength are given in the .osu
         switch (curveType) {
-        case SliderType.Linear:
+        case CurveType.Linear:
             return SliderMath.pointOnLine(points[0], points[1], sliderLength);
-        case SliderType.Catmull:
+        case CurveType.Catmull:
             // not supported
             return null;
-        case SliderType.Bezier:
+        case CurveType.Bezier:
             throw new Error("unimplemented");
-        case SliderType.Perfect:
+        case CurveType.Perfect:
             if (!points || points.length < 2)
                 return null;
             if (points.length == 2)
                 return SliderMath.pointOnLine(points[0], points[1], sliderLength);
             if (points.length > 3)
-                return SliderMath.getEndPoint(SliderType.Bezier, sliderLength, points);
+                return SliderMath.getEndPoint(CurveType.Bezier, sliderLength, points);
 
             let [circumCenter, radius] = SliderMath.getCircumCircle(points[0], points[1], points[2]);
             let radians = sliderLength / radius;

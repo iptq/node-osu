@@ -1,7 +1,7 @@
 {
   "name": "osu",
   "version": "2.0.0",
-  "description": "osu! API Helper Library",
+  "description": "osu! Standard Library",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc"
@@ -12,7 +12,10 @@
   },
   "keywords": [
     "osu",
-    "api"
+    "api",
+    "math",
+    "beatmap",
+    "algorithm"
   ],
   "author": "IOException <ioexceptionosu@gmail.com>",
   "license": "MIT",

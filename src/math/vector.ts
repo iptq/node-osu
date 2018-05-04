@@ -1,4 +1,4 @@
-export class Vector {
+export default class Vector {
     constructor(public x: number, public y: number) {}
 
     // alternates for dimension
