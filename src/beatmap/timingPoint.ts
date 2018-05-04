@@ -7,7 +7,7 @@ export default class TimingPoint {
     constructor(
         public Offset: number,
         public BeatLength: number,
-        protected Velocity: number,
+        public Velocity: number,
         public Meter: number,
         public SampleSetId: number,
         public CustomSampleIndex: number,

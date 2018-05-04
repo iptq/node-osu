@@ -1,22 +1,26 @@
 import {existsSync} from "fs";
 
 import Color from "../color";
+import {ParseError} from "../errors";
 import {readFileAsync} from "../utils";
 
 import {HitCircle, HitObject, Slider, Spinner} from "./hitObject";
-import {Difficulty, DifficultyProperties} from "./structs";
+import {BeatmapConfig, BeatmapMetadata, Difficulty, DifficultyProperties, Mode} from "./structs";
 import TimingPoint, {UninheritedTimingPoint} from "./timingPoint";
+import {AdjustForMods, MapDiffRange} from "./utils";
 
 const sectionPattern = /^\[([a-zA-Z0-9]+)\]$/, keyPairPattern = /^([a-zA-Z0-9]+)[ ]*:[ ]*(.+)?$/;
 
 export class Beatmap {
     public MaxCombo: number = 0;
+    public ReactionTime: number = 0;
 
     public ComboColors: Color[] = [];
     public Tags: string[] = [];
 
     constructor(
         public FileFormat: number,
+        public Config: BeatmapConfig,
         public BpmMin: number = 0,
         public BpmMax: number = Infinity,
         public Difficulty: Difficulty,
@@ -34,7 +38,6 @@ export class Beatmap {
     }
     static async parseString(data: string): Promise<Beatmap> {
         let i;
-        let beatmap: Beatmap;
         let lines = data.split(/\r?\n/);
         let fileFormat = -1;
         let osuSection;
@@ -47,13 +50,24 @@ export class Beatmap {
         let bpmMin = 0;
         let bpmMax = Infinity;
 
+        let stackLeniency = 0;
+        let distanceSpacing = 0;
+        let sliderMultiplier = 0;
+        let beatDivisor = 0;
+        let sliderTickRate = 0;
+        let gridSize = 0;
+        let previewTime = 0;
+        let mode: Mode = 0;
+
         let comboNumber = 0;
         let comboColor = 0;
         let maxCombo = 0;
 
+        let tags: string[] = [];
         let bookmarks: number[] = [];
         let hitObjects = [];
         let timingPoints = [];
+        let comboColors = [];
 
         let approachRate: number = 0, circleSize: number = 0, hpDrain: number = 0, overallDiff: number = 0;
 
@@ -82,16 +96,16 @@ export class Beatmap {
                 timingPoints.push(timingPoint);
                 break;
             case "hitobjects":
-                let hitObject = HitObject.parse(this, line);
+                let hitObject = HitObject.parse(line);
                 if (i == 0 || hitObject.NewCombo) { // or spinner or break apparently
                     comboNumber = 1;
-                    comboColor = (comboColor + 1 + (hitObject instanceof Spinner ? hitObject.customColor : 0)) % beatmap.ComboColors.length;
+                    // TODO: find combo color
+                    // comboColor = (comboColor + 1 + (hitObject instanceof Spinner ? hitObject.customColor : 0)) % beatmap.ComboColors.length;
                 } else {
                     comboNumber += 1;
                     maxCombo = Math.max(maxCombo, comboNumber);
                 }
-                hitObject.comboNumber = comboNumber;
-                hitObject.comboColor = beatmap.ComboColors[comboColor].clone();
+                hitObject.ComboNumber = comboNumber;
                 hitObjects.push(hitObject);
                 break;
             case "events":
@@ -101,7 +115,7 @@ export class Beatmap {
                 if (!osuSection) {
                     match = /^osu file format (v[0-9]+)$/.exec(line);
                     if (match) {
-                        fileFormat = match[1];
+                        fileFormat = parseInt(match[1]);
                         continue;
                     }
                 } else {
@@ -110,12 +124,12 @@ export class Beatmap {
                         if (!match[2])
                             match[2] = "";
                         if (/combo(\d+)/i.exec(match[1])) {
-                            beatmap.ComboColors.push(Color.fromArray(match[2].split(",")));
+                            comboColors.push(Color.fromArray(match[2].split(",").map(x => parseInt(x))));
                             continue;
                         }
                         switch (match[1].toLowerCase()) {
                         case "tags":
-                            beatmap[match[1]] = match[2].split(" ");
+                            tags = match[2].split(" ");
                             break;
                         case "bookmarks":
                             bookmarks = match[2].split(",").map(x => parseInt(x));
@@ -133,18 +147,31 @@ export class Beatmap {
                             overallDiff = parseFloat(match[2]);
                             break;
                         case "stackleniency":
+                            stackLeniency = parseFloat(match[2]);
+                            break;
                         case "distancespacing":
-                        case "beatdivisor":
-                        case "gridsize":
-                        case "previewtime":
-                        case "mode":
+                            distanceSpacing = parseFloat(match[2]);
+                            break;
                         case "slidermultiplier":
+                            sliderMultiplier = parseFloat(match[2]);
+                            break;
+                        case "beatdivisor":
+                            beatDivisor = parseFloat(match[2]);
+                            break;
+                        case "gridsize":
+                            gridSize = parseInt(match[2]);
+                            break;
+                        case "previewtime":
+                            previewTime = parseInt(match[2]);
+                            break;
+                        case "mode":
+                            mode = parseInt(match[2]);
+                            break;
                         case "slidertickrate":
-                            beatmap[match[1]] = parseFloat(match[2]);
+                            sliderTickRate = parseInt(match[2]);
                             break;
                         default:
-                            beatmap[match[1]] = match[2];
-                            break;
+                            throw new ParseError(`Unknown field '${match[1]}'.`);
                         }
                     }
                 }
@@ -153,6 +180,13 @@ export class Beatmap {
         }
 
         let difficulty: Difficulty = {ApproachRate : approachRate, CircleSize : circleSize, HPDrainRate : hpDrain, OverallDifficulty : overallDiff};
+        let metadata: BeatmapMetadata = {Tags : tags};
+        let config: BeatmapConfig = {
+            StackLeniency : stackLeniency,
+            DistanceSpacing : distanceSpacing,
+            SliderMultiplier : sliderMultiplier,
+            SliderTickRate : sliderTickRate,
+        };
 
         timingPoints.sort(function(a, b) { return a.Offset - b.Offset; });
         hitObjects.sort(function(a, b) { return a.StartTime - b.StartTime; });
@@ -177,65 +211,10 @@ export class Beatmap {
         //     }
         // }
 
-        return new Beatmap(fileFormat, bpmMin, bpmMax, difficulty, bookmarks, hitObjects, timingPoints);
-    }
+        let beatmap = new Beatmap(fileFormat, config, bpmMin, bpmMax, difficulty, bookmarks, hitObjects, timingPoints);
+        beatmap.HitObjects.map(x => x.Parent = beatmap);
 
-    public AdjustForMods(mods: number): Difficulty {
-        let approachRate = this.Difficulty.ApproachRate;
-        let circleSize = this.Difficulty.CircleSize;
-        let hpDrain = this.Difficulty.HPDrainRate;
-        let overallDiff = this.Difficulty.OverallDifficulty;
-
-        if (mods.Easy) {
-            approachRate = Math.max(0, this.Difficulty.ApproachRate / 2);
-            circleSize = Math.max(0, this.Difficulty.CircleSize / 2);
-            hpDrain = Math.max(0, this.Difficulty.HPDrainRate / 2);
-            overallDiff = Math.max(0, this.Difficulty.OverallDifficulty / 2);
-        } else if (mods.HardRock) {
-            approachRate = Math.min(10, this.Difficulty.ApproachRate * 1.4);
-            circleSize = Math.min(10, this.Difficulty.CircleSize * 1.3);
-            hpDrain = Math.min(10, this.Difficulty.HPDrainRate * 1.4);
-            overallDiff = Math.min(10, this.Difficulty.OverallDifficulty * 1.4);
-            for (let obj of this.HitObjects)
-                obj.FlipVertical();
-        }
-
-        return {
-            ApproachRate : approachRate,
-            CircleSize : circleSize,
-            HPDrainRate : hpDrain,
-            OverallDifficulty : overallDiff,
-        };
-    }
-
-    public MapDiffRange(diff: number, min: number, mid: number, max: number) {
-        // something that osu uses to (kind of) linearly map a difficulty value to a
-        // range, whatever that range may be. the slope gets steeper for higher
-        // difficulty value at a cutoff of 5
-        if (diff > 5)
-            return mid + (max - mid) * (diff - 5) / 5;
-        if (diff < 5)
-            return mid - (mid - min) * (5 - diff) / 5;
-        return mid;
-    }
-
-    public CalculateDifficultyProperties(diff: Difficulty): DifficultyProperties {
-        let reactionTime = this.mapDiffRange(this.AdjDiff.AR, 1800, 1200, 450);
-        this.Hit300 = this.mapDiffRange(this.AdjDiff.OD, 80, 50, 20);
-        this.Hit100 = this.mapDiffRange(this.AdjDiff.OD, 140, 100, 60);
-        this.Hit50 = this.mapDiffRange(this.AdjDiff.OD, 200, 150, 100);
-
-        let gameFieldWidth = constants.ACTUAL_WIDTH;
-        // this.RealCS = 88 - 8 * (this.AdjDiff.CS - 2); // ?
-        this.RealCS = gameFieldWidth / 8 * (1 - 0.7 * (this.AdjDiff.CS - 5) / 5);
-        // let scount = 0;
-        for (let obj of this.HitObjects) {
-            obj.radius = this.RealCS;
-            if (obj instanceof Slider)
-                obj.calculate();
-        }
-
-        return { ReactionTime: reactionTime, }
+        return beatmap;
     }
 
     public UpdateStacking(start = 0, end = -1) {
@@ -245,7 +224,7 @@ export class Beatmap {
         let nObj = this.HitObjects.length;
         while (end < 0)
             end += nObj;
-        let stackThreshold = this.ReactionTime * this.StackLeniency;
+        let stackThreshold = this.ReactionTime * this.Config.StackLeniency;
 
         // reset stacking first
         for (let i = end; i >= start; --i)

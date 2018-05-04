@@ -8,28 +8,28 @@ export class Spline {
     private lengthMap: number[] = [];
 
     // in this context, a spline is literally just a list of points
-    constructor(public cs: number, public control: Vector[], public length: number) { this.points = []; }
+    constructor(public control: Vector[], public length: number) { this.points = []; }
 
-    static bezier(cs: number, control: Vector[], length: number): Spline {
+    static bezier(control: Vector[], length: number): Spline {
         if (control.length == 2)
-            return Spline.linear(cs, control, length);
-        return new BezierSpline(cs, control, length);
+            return Spline.linear(control, length);
+        return new BezierSpline(control, length);
     }
-    static linear(cs: number, control: Vector[], length: number): Spline {
+    static linear(control: Vector[], length: number): Spline {
         if (control.length != 2)
             throw new Error("Linear slider with the wrong number of control points (expected: 2, got: " + control.length + ")");
 
-        return new LinearSpline(cs, control, length);
+        return new LinearSpline(control, length);
     }
-    static perfect(cs: number, control: Vector[], length: number): Spline {
+    static perfect(control: Vector[], length: number): Spline {
         if (control.length != 3)
             throw new Error("Perfect slider with the wrong number of control points (expected: 3, got: " + control.length + ")");
 
         // if they're on a line, abort mission now
-        if (SliderMath.isLine(control[0], control[1], control[2]))
-            return Spline.linear(cs, [ control[0], control[1] ], length);
+        if (SliderMath.IsLine(control[0], control[1], control[2]))
+            return Spline.linear([ control[0], control[1] ], length);
 
-        return new PerfectSpline(cs, control, length);
+        return new PerfectSpline(control, length);
     }
 
     calculate() {
@@ -144,8 +144,8 @@ class BezierApproximator {
 }
 
 export class BezierSpline extends Spline {
-    constructor(cs: number, points: Vector[], length: number) {
-        super(cs, points, length);
+    constructor(points: Vector[], length: number) {
+        super(points, length);
         let lastIndex = 0;
         for (let i = 0; i < points.length; ++i) {
             // split on red anchors
@@ -172,8 +172,8 @@ export class BezierSpline extends Spline {
 }
 
 export class LinearSpline extends Spline {
-    constructor(cs: number, points: Vector[], length: number) {
-        super(cs, points, length);
+    constructor(points: Vector[], length: number) {
+        super(points, length);
 
         // since we can just draw a single line from one point to another we don't
         // need a million points
@@ -190,11 +190,11 @@ export class LinearSpline extends Spline {
 }
 
 export class PerfectSpline extends Spline {
-    constructor(cs: number, points: Vector[], length: number) {
-        super(cs, points, length);
+    constructor(points: Vector[], length: number) {
+        super(points, length);
 
         // get circumcircle
-        let [center, radius] = SliderMath.getCircumCircle(points[0], points[1], points[2]);
+        let [center, radius] = SliderMath.GetCircumCircle(points[0], points[1], points[2]);
 
         // figure out what t-values the slider begins and ends at
         let t0 = Math.atan2(center.y - points[0].y, points[0].x - center.x);

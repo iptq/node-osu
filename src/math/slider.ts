@@ -3,7 +3,7 @@ import {CurveType} from "../beatmap/structs";
 import Vector from "./vector";
 
 export default class SliderMath {
-    static getCircumCircle(p1: Vector, p2: Vector, p3: Vector): [ Vector, number ] {
+    static GetCircumCircle(p1: Vector, p2: Vector, p3: Vector): [ Vector, number ] {
         // get the [center, radius] circumcircle of the points p1, p2, p3
         let x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y, x3 = p3.x, y3 = p3.y;
         let D = 2 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
@@ -14,38 +14,41 @@ export default class SliderMath {
         return [ center, r ];
     }
 
-    static getEndPoint(curveType: CurveType, sliderLength: number, points: Vector[]): Vector|null {
+    static GetEndPoint(curveType: CurveType, sliderLength: number, points: Vector[]): Vector|null {
         // determines the other endpoint of the slider
         // points is the set of control points
         // curveType and sliderLength are given in the .osu
         switch (curveType) {
         case CurveType.Linear:
-            return SliderMath.pointOnLine(points[0], points[1], sliderLength);
-        case CurveType.Catmull:
-            // not supported
-            return null;
+            return SliderMath.PointOnLine(points[0], points[1], sliderLength);
         case CurveType.Bezier:
             throw new Error("unimplemented");
         case CurveType.Perfect:
             if (!points || points.length < 2)
                 return null;
             if (points.length == 2)
-                return SliderMath.pointOnLine(points[0], points[1], sliderLength);
+                return SliderMath.PointOnLine(points[0], points[1], sliderLength);
             if (points.length > 3)
-                return SliderMath.getEndPoint(CurveType.Bezier, sliderLength, points);
+                return SliderMath.GetEndPoint(CurveType.Bezier, sliderLength, points);
 
-            let [circumCenter, radius] = SliderMath.getCircumCircle(points[0], points[1], points[2]);
+            let [circumCenter, radius] = SliderMath.GetCircumCircle(points[0], points[1], points[2]);
             let radians = sliderLength / radius;
-            if (SliderMath.isLine(points[0], points[1], points[2]))
+            if (SliderMath.IsLine(points[0], points[1], points[2]))
                 radians *= -1;
-            return SliderMath.rotate(circumCenter, points[1], radians);
+            return SliderMath.Rotate(circumCenter, points[1], radians);
+        case CurveType.Catmull:
+            // not supported
+        default:
+            return null;
         }
     }
-    static isLine(a: Vector, b: Vector, c: Vector): boolean {
+
+    static IsLine(a: Vector, b: Vector, c: Vector): boolean {
         // checks if a, b, and c are on the same line
         return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) == 0;
     }
-    static pointOnLine(p1: Vector, p2: Vector, length: number): Vector {
+
+    static PointOnLine(p1: Vector, p2: Vector, length: number): Vector {
         // gets the point on the line from p1 to p2 that's length away from p1
         let fullLength = p1.distanceTo(p2);
         let n = fullLength - length;
@@ -54,7 +57,8 @@ export default class SliderMath {
         let y = (n * p1.y + length * p2.y) / fullLength;
         return new Vector(x, y);
     }
-    static rotate(center: Vector, point: Vector, angle: number): Vector {
+
+    static Rotate(center: Vector, point: Vector, angle: number): Vector {
         // rotates point by angle around center
 
         let nx = Math.cos(angle), ny = Math.sin(angle);
