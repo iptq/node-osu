@@ -11,11 +11,6 @@
 #[macro_use]
 extern crate serde;
 
-extern crate wee_alloc;
-
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 mod beatmap;
 
 pub use crate::beatmap::*;

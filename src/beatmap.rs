@@ -3,14 +3,31 @@ use std::io::Cursor;
 use std::path::PathBuf;
 
 use libosu::{beatmap::Beatmap as _Beatmap, hitobject::HitObject as _HitObject};
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::{prelude::*, throw_str};
 
 #[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+macro_rules! console_log {
+    // Note that this is using the `log` function imported above during
+    // `bare_bones`
+    ($($t:tt)*) => (unsafe{log(&format_args!($($t)*).to_string())})
+}
+
+#[wasm_bindgen(inspectable)]
 #[derive(Serialize, Deserialize)]
 pub struct Beatmap(_Beatmap);
 
 #[wasm_bindgen]
 impl Beatmap {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Beatmap {
+        Beatmap(_Beatmap::default())
+    }
+
     /// PARSE OSU BEATMAP FROM STRING
     pub fn parse(data: &str) -> Beatmap {
         let curs = Cursor::new(data);
@@ -18,21 +35,6 @@ impl Beatmap {
             Ok(v) => Beatmap(v),
             Err(err) => wasm_bindgen::throw_str(&format!("sad: {}", err)),
         }
-    }
-
-    /// PARSE OSU BEATMAP FROM FILE
-    pub fn parseFromFile(path: &str) -> Beatmap {
-        let path = PathBuf::from(path);
-        let file = File::open(path).unwrap();
-        match _Beatmap::parse(file) {
-            Ok(v) => Beatmap(v),
-            Err(err) => wasm_bindgen::throw_str(&format!("sad: {}", err)),
-        }
-    }
-
-    /// JSON
-    pub fn asJson(&self) -> JsValue {
-        JsValue::from_serde(&self).unwrap()
     }
 }
 
